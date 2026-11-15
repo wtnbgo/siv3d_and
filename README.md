@@ -73,7 +73,7 @@ PROJECT_DIR=../MyApp SIV3D_BASE=../OpenSiv3D ./gradlew assembleDebug -Pabis=x86_
 
 ## 既知の制限
 
-- 確認済みは x86_64 エミュレータ (Android 16、Pixel 6) だけ。arm64-v8a の実機は未確認
-- タッチ操作はマウスとして届くが、拡大表示 (Scene の拡大) のときにタッチ位置と Siv3D 側の座標がずれる
+- 確認済み: x86_64 エミュレータ (Android 16、Pixel 6) と arm64-v8a の実機 (Android 14、Mali-G57)
+- タッチ操作は 1 本目の指がマウスとして届く (Cursor / MouseL)
 - 起動時に `OpenGL Error: 0x500` が 1 回ログに出る (描画には影響なし。macOS と同じ)
 - `SIV3D_WITH_MOVIEPLAYER` は有効 (libvpx)。FFmpeg (`SIV3D_WITH_FFMPEG`) は Linux デスクトップ専用で Android では使わない
