@@ -1,0 +1,36 @@
+// -----------------------------------------------------------------------------
+// Siv3D (SDL3 版) アプリの Android 外枠
+//   PROJECT_DIR : アプリのフォルダ (siv3d-app.json / src / assets)。既定は隣の ../siv3d_app
+//   SIV3D_BASE  : OpenSiv3D (develop_sdl3) のルート。既定は隣の ../OpenSiv3D
+// 環境変数か、gradle のプロパティ (-PPROJECT_DIR=... / local.properties) で指定する。
+// -----------------------------------------------------------------------------
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+def localProps = new Properties()
+def localPropsFile = new File(settingsDir, 'local.properties')
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+def resolveDir = { String name, String fallback ->
+    def v = (startParameter.projectProperties[name] ?: localProps[name] ?: System.getenv(name) ?: fallback) as String
+    def f = new File(v)
+    return (f.isAbsolute() ? f : new File(settingsDir, v)).canonicalFile
+}
+gradle.ext.PROJECT_DIR = resolveDir('PROJECT_DIR', '../siv3d_app')
+gradle.ext.SIV3D_BASE = resolveDir('SIV3D_BASE', '../OpenSiv3D')
+
+rootProject.name = 'siv3d_and'
+include ':app'

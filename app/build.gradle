@@ -1,0 +1,123 @@
+import groovy.json.JsonSlurper
+
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+// -----------------------------------------------------------------------------
+// アプリのパッケージ定義 (PROJECT_DIR/siv3d-app.json) の "android" 節を読む
+// -----------------------------------------------------------------------------
+def projectDir_ = gradle.ext.PROJECT_DIR as File
+def siv3dBase = gradle.ext.SIV3D_BASE as File
+def configFile = new File(projectDir_, 'siv3d-app.json')
+if (!configFile.exists()) {
+    throw new GradleException("siv3d-app.json not found: ${configFile} (set PROJECT_DIR)")
+}
+if (!new File(siv3dBase, 'cmake/Siv3DAppPrelude.cmake').exists()) {
+    throw new GradleException("OpenSiv3D not found: ${siv3dBase} (set SIV3D_BASE)")
+}
+def appJson = new JsonSlurper().parse(configFile)
+def androidJson = appJson.android ?: [:]
+def appName = (androidJson.name ?: appJson.name ?: 'Siv3D App') as String
+def appVersion = (appJson.version ?: '1.0.0') as String
+def applicationId_ = (androidJson.applicationId ?: appJson.bundleId ?: 'com.example.siv3dapp') as String
+def versionCode_ = (androidJson.versionCode ?: 1) as int
+// ABI: -Pabis=x86_64 (カンマ区切り) で上書きできる (エミュレータだけで試すときなど)
+def abis = (project.findProperty('abis') ? (project.findProperty('abis') as String).split(',') as List
+            : (androidJson.abis ?: ['arm64-v8a', 'x86_64']) as List)
+def outDir = new File(projectDir_, 'build/android')
+logger.lifecycle("[siv3d] PROJECT_DIR=${projectDir_}")
+logger.lifecycle("[siv3d] SIV3D_BASE =${siv3dBase}")
+
+// ビルド結果はアプリのフォルダ (PROJECT_DIR/build/android/gradle) に置く
+layout.buildDirectory = new File(outDir, 'gradle')
+
+def vcpkgRoot = System.getenv('VCPKG_ROOT')
+if (!vcpkgRoot) {
+    throw new GradleException('VCPKG_ROOT is not set')
+}
+
+// CMake の追加オプション (siv3d-app.json の cmake.options と android.cmake.options)
+def cmakeOptions = [:]
+if (appJson.cmake?.options) cmakeOptions.putAll(appJson.cmake.options)
+if (androidJson.cmake?.options) cmakeOptions.putAll(androidJson.cmake.options)
+
+android {
+    namespace = 'org.siv3d.app'
+    compileSdk = 36
+    ndkVersion = (androidJson.ndkVersion ?: '27.3.13750724') as String
+
+    defaultConfig {
+        applicationId = applicationId_
+        minSdk = (androidJson.minSdk ?: 28) as int   // vcpkg の opencv4 (Android) は API 28 以上を要求する
+        targetSdk = (androidJson.targetSdk ?: 36) as int
+        versionCode = versionCode_
+        versionName = appVersion
+        resValue 'string', 'app_name', appName
+
+        ndk {
+            abiFilters(*abis)
+        }
+
+        externalNativeBuild {
+            cmake {
+                def args = [
+                    "-DSIV3D_BASE=${siv3dBase.absolutePath.replace(File.separatorChar, '/' as char)}",
+                    "-DSIV3D_APP_DIR=${projectDir_.absolutePath.replace(File.separatorChar, '/' as char)}",
+                    "-DCMAKE_TOOLCHAIN_FILE=${vcpkgRoot.replace(File.separatorChar, '/' as char)}/scripts/buildsystems/vcpkg.cmake",
+                    "-DANDROID_STL=c++_shared",
+                ]
+                cmakeOptions.each { k, v -> args << "-D${k}=${v}" }
+                arguments(*args)
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+            version '4.1.2'
+            buildStagingDirectory new File(outDir, 'cxx')
+        }
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs += [new File(outDir, 'generated/assets')]
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug   // 配布用の署名は local.properties で設定する (README 参照)
+        }
+    }
+
+    buildFeatures {
+        resValues = true   // app_name を siv3d-app.json の名前から作る
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// -----------------------------------------------------------------------------
+// APK の assets/siv3d/ に、エンジンのリソース (resources/engine) とアプリのアセットを入れる。
+// 実行時に SivActivity が内部ストレージへ展開し、そのフォルダを Siv3D のアプリディレクトリにする
+// -----------------------------------------------------------------------------
+def generatedAssets = new File(outDir, 'generated/assets/siv3d')
+tasks.register('siv3dAssets', Sync) {
+    into generatedAssets
+    ['font', 'soundfont', 'texture', 'shader/essl'].each { d ->
+        from(new File(siv3dBase, "Web/App/resources/engine/${d}")) { into "resources/engine/${d}" }
+    }
+    (appJson.assets ?: []).each { a ->
+        def from_ = new File(projectDir_, a.from as String)
+        def to_ = (a.to ?: a.from) as String
+        from(from_) { into to_ }
+    }
+}
+preBuild.dependsOn 'siv3dAssets'
