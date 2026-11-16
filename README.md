@@ -100,5 +100,9 @@ arm64-v8a の実機 (Android 14) で、AAB から作った APK が新規イン�
   (`SENSOR_LANDSCAPE`: センサーで横向きと上下逆の横向きを切り替え、縦向きにはならない)、縦長なら縦向き固定になる。
   実機で、上下逆の横向きへの切り替え・その向きでの描画とタッチの位置・縦向きにしても横向きを保つことを確認した。
   変えたい場合は、ウィンドウを作る前に `SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight Portrait")` などを指定する
-- 起動時に `OpenGL Error: 0x500` が 1 回ログに出る (描画には影響なし。macOS と同じ)
+- 文字入力: ソフトウェアキーボードは、入力欄が入力中の間だけ出る (SimpleGUI の TextBox / TextArea は自動。独自の入力欄は、
+  入力中の間 `TextInput::SetEditingArea` を毎フレーム呼ぶ)。入力欄の外をタップすると閉じ、キーボードの閉じるボタンや
+  戻るボタンで閉じた後は、入力欄をもう一度タップすると出る (戻るボタンはキーボードだけを閉じ、アプリは終了しない)。
+  実機で日本語・英字・BS の入力と、これらの開閉を確認した
+- ファイルダイアログは使えない (空の結果が返る)
 - `SIV3D_WITH_MOVIEPLAYER` は有効 (libvpx)。FFmpeg (`SIV3D_WITH_FFMPEG`) は Linux デスクトップ専用で Android では使わない
