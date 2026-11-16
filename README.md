@@ -95,6 +95,10 @@ arm64-v8a の実機 (Android 14) で、AAB から作った APK が新規イン�
 - 戻るボタンはウィンドウの閉じるボタンと同じ扱い (既定では `System::Update()` が false を返して終了。
   使わない場合は `System::SetTerminationTriggers` から `UserAction::CloseButtonClicked` を外す)。
   アプリが終わるとプロセスも終了する (Siv3D は同じプロセスで作り直せないため)
-- ホームに戻って復帰しても描画は続く (実機で確認)。画面の回転は未確認
+- ホームに戻って復帰しても描画は続く (実機で確認)
+- 画面の向きは、SDL がウィンドウの縦横比から決める。横長 (テンプレートの 800x600 など) なら横向き固定
+  (`SENSOR_LANDSCAPE`: センサーで横向きと上下逆の横向きを切り替え、縦向きにはならない)、縦長なら縦向き固定になる。
+  実機で、上下逆の横向きへの切り替え・その向きでの描画とタッチの位置・縦向きにしても横向きを保つことを確認した。
+  変えたい場合は、ウィンドウを作る前に `SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight Portrait")` などを指定する
 - 起動時に `OpenGL Error: 0x500` が 1 回ログに出る (描画には影響なし。macOS と同じ)
 - `SIV3D_WITH_MOVIEPLAYER` は有効 (libvpx)。FFmpeg (`SIV3D_WITH_FFMPEG`) は Linux デスクトップ専用で Android では使わない
