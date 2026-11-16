@@ -68,8 +68,8 @@ PROJECT_DIR=../MyApp SIV3D_BASE=../OpenSiv3D ./gradlew assembleDebug -Pabis=x86_
 
 ## 署名
 
-`release` は現在 debug の鍵で署名します。配布用の鍵は `app/build.gradle` の `signingConfigs` に追加してください
-(鍵とパスワードは `local.properties` や環境変数で渡し、リポジトリに入れないこと)。
+`release` は現在 debug の鍵で署名します。配布用の鍵の作り方と `signingConfigs` の設定例 (鍵とパスワードはリポジトリに入れない)、
+Google Play 向けの AAB は、OpenSiv3D の [`SDL3/SIGNING.md`](https://github.com/wtnbgo/OpenSiv3D/blob/develop_sdl3/SDL3/SIGNING.md) を参照してください。
 
 ## 既知の制限
 

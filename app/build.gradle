@@ -90,7 +90,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.debug   // 配布用の署名は local.properties で設定する (README 参照)
+            signingConfig signingConfigs.debug   // 配布用の鍵での署名は OpenSiv3D の SDL3/SIGNING.md を参照
         }
     }
 
