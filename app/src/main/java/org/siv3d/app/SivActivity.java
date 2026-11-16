@@ -43,6 +43,19 @@ public class SivActivity extends SDLActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        final boolean finishing = isFinishing();
+        super.onDestroy();
+        // Siv3D のエンジン (ネイティブの静的な状態) は同じプロセスで作り直せない。アプリの終了
+        // (Main からの return・戻るボタン) でアクティビティが終わったらプロセスも終了し、次の起動を
+        // 新しいプロセスで始める (残すと SDL が二重起動とみなして、次の起動がすぐ終わってしまう)
+        if (finishing) {
+            Log.v(TAG, "activity finished; exiting the process");
+            System.exit(0);
+        }
+    }
+
+    @Override
     protected String[] getLibraries() {
         return new String[] { "SDL3", "main" };
     }

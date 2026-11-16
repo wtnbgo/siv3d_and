@@ -75,5 +75,9 @@ PROJECT_DIR=../MyApp SIV3D_BASE=../OpenSiv3D ./gradlew assembleDebug -Pabis=x86_
 
 - 確認済み: x86_64 エミュレータ (Android 16、Pixel 6) と arm64-v8a の実機 (Android 14、Mali-G57)
 - タッチ操作は 1 本目の指がマウスとして届く (Cursor / MouseL)
+- 戻るボタンはウィンドウの閉じるボタンと同じ扱い (既定では `System::Update()` が false を返して終了。
+  使わない場合は `System::SetTerminationTriggers` から `UserAction::CloseButtonClicked` を外す)。
+  アプリが終わるとプロセスも終了する (Siv3D は同じプロセスで作り直せないため)
+- ホームに戻って復帰しても描画は続く (実機で確認)。画面の回転は未確認
 - 起動時に `OpenGL Error: 0x500` が 1 回ログに出る (描画には影響なし。macOS と同じ)
 - `SIV3D_WITH_MOVIEPLAYER` は有効 (libvpx)。FFmpeg (`SIV3D_WITH_FFMPEG`) は Linux デスクトップ専用で Android では使わない
