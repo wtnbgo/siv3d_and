@@ -71,6 +71,23 @@ PROJECT_DIR=../MyApp SIV3D_BASE=../OpenSiv3D ./gradlew assembleDebug -Pabis=x86_
 `release` は現在 debug の鍵で署名します。配布用の鍵の作り方と `signingConfigs` の設定例 (鍵とパスワードはリポジトリに入れない)、
 Google Play 向けの AAB は、OpenSiv3D の [`SDL3/SIGNING.md`](https://github.com/wtnbgo/OpenSiv3D/blob/develop_sdl3/SDL3/SIGNING.md) を参照してください。
 
+## AAB (Google Play 向け)
+
+`siv3d-app.json` の `android.package` に `"aab"` を入れると、`package` のときに `bundleRelease` で AAB を作り、
+`build/android/package/<exeName>-<version>-android.aab` に置きます (開発者の手元だけで試すなら `siv3d-app.local.json` に
+`{ "android": { "package": ["apk", "aab"] } }` と書く)。
+
+AAB はそのままでは端末に入らないので、手元で動作を確かめるときは、AAB から全 ABI 入りの APK を作って入れます
+(Google Play が AAB から APK を作るのと同じ bundletool を使う):
+
+```bash
+cd siv3d_and
+PROJECT_DIR=../MyApp SIV3D_BASE=../OpenSiv3D ./gradlew packageReleaseUniversalApk
+adb install ../MyApp/build/android/gradle/outputs/apk_from_bundle/release/app-release-universal.apk
+```
+
+arm64-v8a の実機 (Android 14) で、AAB から作った APK が新規インストールで起動する (アセットの展開・描画) ことを確認済み。
+
 ## 既知の制限
 
 - 確認済み: x86_64 エミュレータ (Android 16、Pixel 6) と arm64-v8a の実機 (Android 14、Mali-G57)
